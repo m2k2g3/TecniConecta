@@ -1,1 +1,1 @@
-# TeniConecta
+# TecniConecta
