@@ -35,6 +35,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnGuardarText = document.getElementById('btnGuardarText');
     const btnGuardarSpinner = document.getElementById('btnGuardarSpinner');
 
+    // Elementos del DOM - Formulario de Actualización de Correo (HU-7)
+    const formCorreo = document.getElementById('formCorreo');
+    const correoActualDisplay = document.getElementById('correoActualDisplay');
+    const inputNuevoCorreo = document.getElementById('nuevoCorreo');
+    const inputPassConfirmCorreo = document.getElementById('passwordConfirmCorreo');
+    const btnCambiarCorreo = document.getElementById('btnCambiarCorreo');
+    const btnCorreoText = document.getElementById('btnCorreoText');
+    const btnCorreoSpinner = document.getElementById('btnCorreoSpinner');
+
     // Elementos del DOM - Formulario de Contraseña
     const formPassword = document.getElementById('formPassword');
     const inputPassActual = document.getElementById('passwordActual');
@@ -45,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnPassSpinner = document.getElementById('btnPassSpinner');
 
     // Botones de mostrar/ocultar contraseña
+    configurarTogglePassword('togglePassCorreo', 'passwordConfirmCorreo', 'iconPassCorreo');
     configurarTogglePassword('togglePassActual', 'passwordActual', 'iconPassActual');
     configurarTogglePassword('togglePassNuevo', 'passwordNuevo', 'iconPassNuevo');
     configurarTogglePassword('togglePassConfirm', 'passwordConfirm', 'iconPassConfirm');
@@ -120,6 +130,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Inputs del formulario de información
         inputNombre.value = user.nombre || '';
         inputCorreo.value = user.correo || '';
+        if (correoActualDisplay) {
+            correoActualDisplay.value = user.correo || '';
+        }
         inputTelefono.value = user.telefono || '';
         inputCiudad.value = user.ciudad || '';
         inputDireccion.value = user.direccion || '';
@@ -233,7 +246,96 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     /**
-     * Manejador del Formulario 2: Cambio de Contraseña
+     * =========================================================================
+     * HISTORIA DE USUARIO 7: ACTUALIZACIÓN DE CORREO ELECTRÓNICO (HU-7)
+     * =========================================================================
+     * - QAS45HU-86: Solicitar confirmación con la contraseña actual.
+     * - QAS45HU-90: Verificar que el nuevo correo no esté registrado / duplicado.
+     * - QAS45HU-91: Actualizar el correo en las tablas correspondientes / almacenamiento.
+     * - QAS45HU-93: Renovar la sesión del usuario con el nuevo correo.
+     */
+    if (formCorreo) {
+        formCorreo.addEventListener('submit', (e) => {
+            e.preventDefault();
+            alertContainer.innerHTML = '';
+
+            const nuevoCorreo = inputNuevoCorreo.value.trim().toLowerCase();
+            const passwordConfirm = inputPassConfirmCorreo.value;
+
+            // Validación de campos vacíos
+            if (!nuevoCorreo || !passwordConfirm) {
+                mostrarAlerta('Por favor completa el nuevo correo y tu contraseña actual para confirmar.', 'danger');
+                return;
+            }
+
+            // Validación de formato de correo
+            const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!regexCorreo.test(nuevoCorreo)) {
+                mostrarAlerta('El formato del nuevo correo electrónico no es válido.', 'warning');
+                return;
+            }
+
+            // Verificar si el correo es igual al actual
+            if (nuevoCorreo === usuarioActual.correo.toLowerCase()) {
+                mostrarAlerta('El nuevo correo no puede ser igual al correo que ya tienes registrado.', 'info');
+                return;
+            }
+
+            // QAS45HU-86: Solicitar confirmación con la contraseña actual
+            if (passwordConfirm !== usuarioActual.password) {
+                mostrarAlerta('Contraseña incorrecta. Por seguridad, debes ingresar tu contraseña actual válida para autorizar el cambio de correo.', 'danger');
+                return;
+            }
+
+            activarBotonCarga(btnCambiarCorreo, btnCorreoText, btnCorreoSpinner, 'Verificando...');
+
+            setTimeout(() => {
+                let clientes = JSON.parse(localStorage.getItem(STORAGE_KEY_CLIENTES)) || [];
+
+                // QAS45HU-90: Verificar que el nuevo correo no esté registrado por otro usuario
+                const correoDuplicado = clientes.some(c => 
+                    c.correo && 
+                    c.correo.toLowerCase() === nuevoCorreo && 
+                    c.id !== usuarioActual.id
+                );
+
+                if (correoDuplicado) {
+                    restaurarBotonCarga(btnCambiarCorreo, btnCorreoText, btnCorreoSpinner, 'Actualizar Correo');
+                    mostrarAlerta('El correo electrónico ingresado ya se encuentra registrado por otra cuenta.', 'danger');
+                    return;
+                }
+
+                // QAS45HU-91: Actualizar el correo en las tablas correspondientes / almacenamiento
+                const correoAnterior = usuarioActual.correo;
+                usuarioActual.correo = nuevoCorreo;
+
+                const index = clientes.findIndex(c => 
+                    (usuarioActual.id && c.id === usuarioActual.id) || 
+                    (c.correo && c.correo.toLowerCase() === correoAnterior.toLowerCase())
+                );
+
+                if (index !== -1) {
+                    clientes[index].correo = nuevoCorreo;
+                } else {
+                    clientes.push(usuarioActual);
+                }
+                localStorage.setItem(STORAGE_KEY_CLIENTES, JSON.stringify(clientes));
+
+                // QAS45HU-93: Renovar la sesión del usuario con el nuevo correo
+                guardarSesionActiva(usuarioActual);
+
+                // Actualizar interfaz visual
+                renderizarDatosEnVista(usuarioActual);
+                formCorreo.reset();
+
+                restaurarBotonCarga(btnCambiarCorreo, btnCorreoText, btnCorreoSpinner, 'Actualizar Correo');
+                mostrarAlerta(`¡Correo electrónico actualizado con éxito a "${nuevoCorreo}"! Tu sesión activa ha sido renovada.`, 'success');
+            }, 600);
+        });
+    }
+
+    /**
+     * Manejador del Formulario 3: Cambio de Contraseña
      */
     formPassword.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -289,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function sincronizarUsuarioEnBaseDeDatos(usuario) {
         let clientes = JSON.parse(localStorage.getItem(STORAGE_KEY_CLIENTES)) || [];
-        const index = clientes.findIndex(c => c.correo.toLowerCase() === usuario.correo.toLowerCase());
+        const index = clientes.findIndex(c => (usuario.id && c.id === usuario.id) || (c.correo && c.correo.toLowerCase() === usuario.correo.toLowerCase()));
 
         if (index !== -1) {
             clientes[index] = { ...clientes[index], ...usuario };
