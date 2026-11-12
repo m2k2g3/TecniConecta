@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Perfil - TecniConecta</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Estilos de Perfil -->
+    <link rel="stylesheet" href="profile-client.css">
+</head>
+<body>
+
+    <!-- NAVBAR SUPERIOR -->
+    <nav class="navbar navbar-expand-lg navbar-tecni sticky-top py-3">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+                <i class="bi bi-gear-wide-connected fs-3 text-primary"></i>
+                <span class="fw-bold fs-4 text-white">Tecni<span class="text-primary">Conecta</span></span>
+            </a>
+            
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge-role-client d-none d-sm-inline-flex">
+                    <i class="bi bi-person-check-fill"></i> Panel de Cliente
+                </span>
+                <a href="register-client.html" class="btn btn-tecni-outline btn-sm">
+                    <i class="bi bi-person-plus me-1"></i> Registro
+                </a>
+                <button type="button" class="btn btn-outline-danger btn-sm rounded-3" id="btnLogout" title="Cerrar sesión">
+                    <i class="bi bi-box-arrow-right me-1"></i> Salir
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <div class="container py-4 py-lg-5">
+        
+        <!-- ENCABEZADO DE SECCIÓN -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-2">
+            <div>
+                <h2 class="fw-bold text-white mb-1">
+                    <i class="bi bi-person-gear text-primary me-2"></i>Gestión de Perfil
+                </h2>
+                <p class="text-secondary small mb-0">Consulta y actualiza tu información personal, foto y credenciales de acceso.</p>
+            </div>
+            <div>
+                <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 px-3 py-2 rounded-pill">
+                    <i class="bi bi-shield-check me-1"></i> Cuenta Verificada
+                </span>
+            </div>
+        </div>
+
+        <!-- CONTENEDOR DE ALERTAS GLOBALES -->
+        <div id="alertContainer"></div>
+
+        <div class="row g-4">
+            
+            <!-- COLUMNA IZQUIERDA: RESUMEN DEL PERFIL Y FOTO -->
+            <div class="col-lg-4">
+                <div class="card card-tecni p-4 text-center h-100">
+                    <div class="card-body d-flex flex-column align-items-center">
+                        
+                        <!-- AVATAR / FOTO DE PERFIL -->
+                        <div class="avatar-container mb-3">
+                            <img id="avatarImg" src="" alt="Foto de perfil" class="avatar-image d-none">
+                            <div id="avatarPlaceholder" class="avatar-placeholder">TC</div>
+                            
+                            <label for="inputAvatar" class="btn-avatar-edit" title="Cambiar fotografía">
+                                <i class="bi bi-camera-fill"></i>
+                            </label>
+                            <input type="file" id="inputAvatar" accept="image/png, image/jpeg, image/webp" class="d-none">
+                        </div>
+
+                        <h4 class="fw-bold text-white mb-1" id="resumenNombre">Cargando...</h4>
+                        <p class="text-secondary small mb-2" id="resumenCorreo">correo@ejemplo.com</p>
+
+                        <div class="mb-4">
+                            <span class="badge-role-client">
+                                <i class="bi bi-person-fill"></i> Rol: Cliente
+                            </span>
+                        </div>
+
+                        <div class="w-100 border-top border-secondary border-opacity-25 pt-3 mt-auto">
+                            <div class="d-flex flex-column gap-2 text-start">
+                                <div class="info-chip">
+                                    <i class="bi bi-telephone-fill"></i>
+                                    <div class="info-chip-text">
+                                        <small>Teléfono</small>
+                                        <strong id="resumenTelefono">--</strong>
+                                    </div>
+                                </div>
+                                <div class="info-chip">
+                                    <i class="bi bi-geo-alt-fill"></i>
+                                    <div class="info-chip-text">
+                                        <small>Ciudad</small>
+                                        <strong id="resumenCiudad">--</strong>
+                                    </div>
+                                </div>
+                                <div class="info-chip">
+                                    <i class="bi bi-house-door-fill"></i>
+                                    <div class="info-chip-text">
+                                        <small>Dirección</small>
+                                        <strong id="resumenDireccion">--</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMNA DERECHA: FORMULARIOS DE ACTUALIZACIÓN -->
+            <div class="col-lg-8">
+                <div class="d-flex flex-column gap-4">
+
+                    <!-- CARD 1: ACTUALIZACIÓN DE DATOS PERSONALES -->
+                    <div class="card card-tecni p-4">
+                        <div class="card-tecni-header mb-4">
+                            <h5 class="fw-bold text-white mb-1">
+                                <i class="bi bi-pencil-square text-primary me-2"></i>Actualización de Datos Personales
+                            </h5>
+                            <p class="text-secondary small mb-0">Mantén al día tus datos de contacto para que los técnicos puedan coordinar sus visitas correctamente.</p>
+                        </div>
+
+                        <form id="formPerfil" novalidate>
+                            
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label for="nombre" class="form-label form-label-tecni">Nombre Completo <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-tecni" id="nombre" placeholder="Tu nombre y apellido" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="correo" class="form-label form-label-tecni">Correo Electrónico (Identificador de acceso)</label>
+                                    <input type="email" class="form-control form-control-tecni" id="correo" readonly disabled>
+                                    <small class="text-secondary" style="font-size: 0.76rem;">El correo actúa como ID de inicio de sesión.</small>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-4">
+                                    <label for="telefono" class="form-label form-label-tecni">Teléfono / Celular <span class="text-danger">*</span></label>
+                                    <input type="tel" class="form-control form-control-tecni" id="telefono" placeholder="3001234567" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="ciudad" class="form-label form-label-tecni">Ciudad <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-tecni" id="ciudad" placeholder="Ej. Duitama" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="direccion" class="form-label form-label-tecni">Dirección Residencial <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-tecni" id="direccion" placeholder="Calle 12 # 34-56" required>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" id="btnGuardarDatos" class="btn btn-tecni d-flex align-items-center gap-2">
+                                    <i class="bi bi-save2-fill"></i>
+                                    <span id="btnGuardarText">Guardar Datos</span>
+                                    <span id="btnGuardarSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- CARD 2: CAMBIO DE CONTRASEÑA / SEGURIDAD -->
+                    <div class="card card-tecni p-4">
+                        <div class="card-tecni-header mb-4">
+                            <h5 class="fw-bold text-white mb-1">
+                                <i class="bi bi-shield-lock text-warning me-2"></i>Seguridad y Contraseña
+                            </h5>
+                            <p class="text-secondary small mb-0">Para cambiar tu contraseña actual, confírmala antes de registrar la nueva clave.</p>
+                        </div>
+
+                        <form id="formPassword" novalidate>
+                            
+                            <div class="mb-3">
+                                <label for="passwordActual" class="form-label form-label-tecni">Contraseña Actual <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control form-control-tecni border-end-0" id="passwordActual" placeholder="Ingresa tu clave actual" required>
+                                    <button class="btn btn-eye border-start-0" type="button" id="togglePassActual">
+                                        <i class="bi bi-eye-slash" id="iconPassActual"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label for="passwordNuevo" class="form-label form-label-tecni">Nueva Contraseña <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control form-control-tecni border-end-0" id="passwordNuevo" placeholder="Mínimo 6 caracteres" required>
+                                        <button class="btn btn-eye border-start-0" type="button" id="togglePassNuevo">
+                                            <i class="bi bi-eye-slash" id="iconPassNuevo"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="passwordConfirm" class="form-label form-label-tecni">Confirmar Nueva Contraseña <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control form-control-tecni border-end-0" id="passwordConfirm" placeholder="Repite la nueva clave" required>
+                                        <button class="btn btn-eye border-start-0" type="button" id="togglePassConfirm">
+                                            <i class="bi bi-eye-slash" id="iconPassConfirm"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" id="btnCambiarPass" class="btn btn-tecni d-flex align-items-center gap-2">
+                                    <i class="bi bi-key-fill"></i>
+                                    <span id="btnPassText">Actualizar Contraseña</span>
+                                    <span id="btnPassSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Script de Gestión de Perfil -->
+    <script src="profile-client.js"></script>
+</body>
+</html>

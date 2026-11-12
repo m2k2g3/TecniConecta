@@ -112,13 +112,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             usuarios.push(nuevoCliente);
             localStorage.setItem('db_clientes_tecni', JSON.stringify(usuarios));
+            localStorage.setItem('usuario_activo', JSON.stringify(nuevoCliente));
+            sessionStorage.setItem('usuario_activo', JSON.stringify(nuevoCliente));
 
-            mostrarAlerta('Registro exitoso. Redirigiendo al inicio de sesión...', 'success');
+            mostrarAlerta('¡Registro exitoso! Redirigiendo a tu perfil...', 'success');
             btnText.textContent = 'Completado';
 
             setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 2000);
+                window.location.href = 'profile-client.html';
+            }, 1500);
         }, 1000);
     });
 });
