@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Técnico - TecniConecta</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a1628 0%, #1a2c47 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #fff;
+        }
+
+        .register-wrapper {
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        .logo-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-header h1 {
+            font-size: 26px;
+            color: #00d4ff;
+            margin-bottom: 5px;
+        }
+
+        .logo-header p {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            background: #1e293b;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 14px;
+            color: #94a3b8;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: #0e9f6e;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .info-banner {
+            background: rgba(14, 159, 110, 0.15);
+            border-left: 3px solid #0e9f6e;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            font-size: 13px;
+            color: #b2f2dd;
+        }
+
+        .form-card {
+            background: #111827;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: #cbd5e1;
+            margin-bottom: 6px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .document-box {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .document-box h3 {
+            font-size: 15px;
+            margin-bottom: 10px;
+            color: #fbbf24;
+        }
+
+        .document-box ul {
+            margin: 10px 0 10px 20px;
+            font-size: 13px;
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+
+        .document-formats {
+            font-size: 12px;
+            color: #94a3b8;
+            margin: 8px 0 15px;
+        }
+
+        .upload-area {
+            border: 2px dashed #374151;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-area:hover {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .upload-area input {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .warning-box {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 3px solid #f59e0b;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-size: 13px;
+            color: #fcd34d;
+            line-height: 1.6;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, #00b4d8, #0077b6);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: transform 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .login-link a {
+            color: #00d4ff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .success-box {
+            text-align: center;
+            padding: 30px 20px;
+            display: none;
+        }
+
+        .success-box h2 {
+            color: #4ade80;
+            margin: 15px 0;
+        }
+
+        .file-name {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #4ade80;
+        }
+    </style>
+</head>
+<body>
+
+<div class="register-wrapper">
+    <div class="logo-header">
+        <h1>⚡ TecniConecta</h1>
+        <h2>Crear Cuenta en TecniConecta</h2>
+        <p>Registro de profesional técnico para ofrecer servicios</p>
+    </div>
+
+    <div class="tabs">
+        <div class="tab">👤 Cliente</div>
+        <div class="tab active">🔧 Técnico</div>
+        <div class="tab">🔒 Admin</div>
+    </div>
+
+    <div class="info-banner">
+        ℹ️ Como Técnico tu perfil será enviado a validación para que el Administrador apruebe tus credenciales.
+    </div>
+
+    <!-- ✅ Mensaje de éxito (oculto al inicio) -->
+    <div id="successMessage" class="form-card success-box">
+        <h2>✅ ¡Registro completado!</h2>
+        <p>Tu cuenta está en <strong>proceso de revisión</strong>.</p>
+        <p style="margin-top:10px;color:#94a3b8;">El administrador revisará tu documentación. Te notificaremos por correo cuando sea aprobada.</p>
+        <a href="login.html" class="btn-primary" style="display:inline-block;text-decoration:none;margin-top:20px;">Ir a Iniciar Sesión</a>
+    </div>
+
+    <form id="technicianForm" enctype="multipart/form-data" method="post">
+    <div id="formContent" class="form-card">
+
+        <div class="form-group">
+            <label>✏️ Nombre Completo *</label>
+            <input type="text" id="NombreCompleto" name="NombreCompleto" required>
+        </div>
+
+        <div class="form-group">
+            <label>✉️ Correo Electrónico *</label>
+            <input type="email" id="CorreoElectronico" name="CorreoElectronico" required>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>🔒 Contraseña *</label>
+                <input type="password" id="Contrasena" name="Contrasena" required>
+            </div>
+            <div class="form-group">
+                <label>🔒 Confirmar Contraseña *</label>
+                <input type="password" id="ConfirmarContrasena" name="ConfirmarContrasena" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>📱 Teléfono Móvil</label>
+            <input type="tel" id="Telefono" name="Telefono">
+        </div>
+
+        <div class="form-group">
+            <label>🏠 Dirección</label>
+            <input type="text" id="Direccion" name="Direccion">
+        </div>
+
+        <div class="form-group">
+            <label>📍 Ciudad</label>
+            <input type="text" id="Ciudad" name="Ciudad">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>🔧 Especialidad Principal / Categoría *</label>
+                <select id="CategoriaId" name="CategoriaId" required>
+                    <option value="">Selecciona una categoría</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>📌 Años de Experiencia *</label>
+                <input type="number" id="AnosExperiencia" name="AnosExperiencia" min="0" required value="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>📝 Especialidad Detallada</label>
+            <input type="text" id="EspecialidadDetallada" name="EspecialidadDetallada" placeholder="Describe tus servicios específicos...">
+        </div>
+
+        <div class="form-group">
+            <label>💰 Tarifa Base por Visita (COP)</label>
+            <input type="number" id="PrecioBaseVisita" name="PrecioBaseVisita" min="0" step="500" value="0">
+        </div>
+
+        <!-- 📄 Sección de Documentos -->
+        <div class="document-box">
+            <h3>🛡️ Subir Documentos de Identidad y Acreditación</h3>
+            <p style="font-size:13px;color:#94a3b8;margin-bottom:8px;"><strong>Revisión Obligatoria</strong></p>
+            <p style="font-size:13px;color:#cbd5e1;">Para validar tu identidad y proteger a los usuarios de la plataforma, debes adjuntar tus documentos oficiales:</p>
+            <ul>
+                <li>Copia legible de tu Cédula de Ciudadanía (ambas caras)</li>
+                <li>Títulos técnicos, diplomas o certificaciones laborales (ej: SENA, Matrícula Profesional, RETIE)</li>
+            </ul>
+            
+            <div class="document-formats">
+                📎 Formatos permitidos: <strong>PDF, JPG, PNG, WEBP</strong> — Tamaño máximo: <strong>20 MB</strong>
+            </div>
+
+            <div class="upload-area" id="uploadArea">
+                <input type="file" id="DocumentoVerificacion" name="DocumentoVerificacion" 
+                       accept=".pdf,.jpg,.jpeg,.png,.webp" required>
+                <div class="upload-icon">☁️</div>
+                <p>Haz clic aquí o arrastra tu archivo</p>
+                <p class="file-name" id="fileName"></p>
+            </div>
+        </div>
+
+        <!-- ⚠️ Aviso de Control de Acceso -->
+        <div class="warning-box">
+            ⚠️ <strong>Control de Acceso:</strong> El Administrador revisará primero la autenticidad de tus documentos. <strong>Mientras no sea aprobado, no podrás ingresar a la plataforma.</strong> Te notificaremos por correo cuando sea aprobado.
+        </div>
+
+        <button type="submit" class="btn-primary">✅ Completar Registro</button>
+
+        <div class="login-link">
+            ¿Ya tienes una cuenta registrada? <a href="login.html">Iniciar Sesión</a>
+        </div>
+    </div>
+    </form>
+</div>
+
+<script src="../modulos/register-technician.js"></script>
+</body>
+</html>
