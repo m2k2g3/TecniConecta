@@ -83,15 +83,12 @@ document.addEventListener('DOMContentLoaded', () => {
         let clientes = JSON.parse(localStorage.getItem(STORAGE_KEY_CLIENTES)) || [];
 
         if (sesion && sesion.correo) {
-            // Buscar la versión más actualizada en la lista de clientes
             const encontrado = clientes.find(c => c.correo.toLowerCase() === sesion.correo.toLowerCase());
             usuarioActual = encontrado || sesion;
         } else if (clientes.length > 0) {
-            // Si no hay sesión explícita pero hay usuarios registrados (ej. pruebas directas), tomar el último
             usuarioActual = clientes[clientes.length - 1];
             guardarSesionActiva(usuarioActual);
         } else {
-            // Si la base local está completamente vacía, creamos un usuario inicial para demostración inmediata
             usuarioActual = {
                 id: Date.now(),
                 nombre: 'Ricardo Espitia',
@@ -110,24 +107,18 @@ document.addEventListener('DOMContentLoaded', () => {
             guardarSesionActiva(usuarioActual);
         }
 
-        // Renderizar los datos en pantalla
         renderizarDatosEnVista(usuarioActual);
     }
 
-    /**
-     * Pinta en la interfaz gráfica la información del cliente
-     */
     function renderizarDatosEnVista(user) {
         if (!user) return;
 
-        // Resumen
         resumenNombre.textContent = user.nombre || 'Sin nombre';
         resumenCorreo.textContent = user.correo || 'Sin correo';
         resumenTelefono.textContent = user.telefono || '--';
         resumenCiudad.textContent = user.ciudad || '--';
         resumenDireccion.textContent = user.direccion || '--';
 
-        // Inputs del formulario de información
         inputNombre.value = user.nombre || '';
         inputCorreo.value = user.correo || '';
         if (correoActualDisplay) {
@@ -137,13 +128,9 @@ document.addEventListener('DOMContentLoaded', () => {
         inputCiudad.value = user.ciudad || '';
         inputDireccion.value = user.direccion || '';
 
-        // Avatar
         actualizarAvatarUI(user.nombre, user.fotoPerfil);
     }
 
-    /**
-     * Muestra la foto o el placeholder con iniciales
-     */
     function actualizarAvatarUI(nombre, urlFoto) {
         if (urlFoto && urlFoto.trim() !== '') {
             avatarImg.src = urlFoto;
@@ -153,7 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
             avatarImg.classList.add('d-none');
             avatarPlaceholder.classList.remove('d-none');
 
-            // Extraer las dos primeras iniciales
             const partes = (nombre || 'TC').trim().split(/\s+/);
             let iniciales = 'TC';
             if (partes.length === 1 && partes[0].length > 0) {
@@ -165,14 +151,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /**
-     * Sube y previsualiza una foto de perfil en base64
-     */
     inputAvatar.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Validaciones
         const tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp'];
         if (!tiposPermitidos.includes(file.type)) {
             mostrarAlerta('Formato no permitido. Solo se aceptan imágenes JPG, PNG o WEBP.', 'warning');
@@ -192,19 +174,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const base64Url = event.target.result;
             usuarioActual.fotoPerfil = base64Url;
 
-            // Actualizar vista previa
             actualizarAvatarUI(usuarioActual.nombre, base64Url);
-
-            // Persistir cambios
             sincronizarUsuarioEnBaseDeDatos(usuarioActual);
             mostrarAlerta('¡Fotografía de perfil actualizada con éxito!', 'success');
         };
         reader.readAsDataURL(file);
     });
 
-    /**
-     * Manejador del Formulario 1: Actualizar Datos Personales
-     */
     formPerfil.addEventListener('submit', (e) => {
         e.preventDefault();
         alertContainer.innerHTML = '';
@@ -214,7 +190,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const ciudad = inputCiudad.value.trim();
         const direccion = inputDireccion.value.trim();
 
-        // Validaciones de campos
         if (!nombre || !telefono || !ciudad || !direccion) {
             mostrarAlerta('Todos los campos marcados con asterisco (*) son obligatorios.', 'danger');
             return;
@@ -226,17 +201,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Estado de carga en botón
         activarBotonCarga(btnGuardarDatos, btnGuardarText, btnGuardarSpinner, 'Guardando...');
 
         setTimeout(() => {
-            // Actualizar objeto en memoria
             usuarioActual.nombre = nombre;
             usuarioActual.telefono = telefono;
             usuarioActual.ciudad = ciudad;
             usuarioActual.direccion = direccion;
 
-            // Persistir
             sincronizarUsuarioEnBaseDeDatos(usuarioActual);
             renderizarDatosEnVista(usuarioActual);
 
@@ -245,15 +217,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 600);
     });
 
-    /**
-     * =========================================================================
-     * HISTORIA DE USUARIO 7: ACTUALIZACIÓN DE CORREO ELECTRÓNICO (HU-7)
-     * =========================================================================
-     * - QAS45HU-86: Solicitar confirmación con la contraseña actual.
-     * - QAS45HU-90: Verificar que el nuevo correo no esté registrado / duplicado.
-     * - QAS45HU-91: Actualizar el correo en las tablas correspondientes / almacenamiento.
-     * - QAS45HU-93: Renovar la sesión del usuario con el nuevo correo.
-     */
     if (formCorreo) {
         formCorreo.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -262,26 +225,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const nuevoCorreo = inputNuevoCorreo.value.trim().toLowerCase();
             const passwordConfirm = inputPassConfirmCorreo.value;
 
-            // Validación de campos vacíos
             if (!nuevoCorreo || !passwordConfirm) {
                 mostrarAlerta('Por favor completa el nuevo correo y tu contraseña actual para confirmar.', 'danger');
                 return;
             }
 
-            // Validación de formato de correo
             const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!regexCorreo.test(nuevoCorreo)) {
                 mostrarAlerta('El formato del nuevo correo electrónico no es válido.', 'warning');
                 return;
             }
 
-            // Verificar si el correo es igual al actual
             if (nuevoCorreo === usuarioActual.correo.toLowerCase()) {
                 mostrarAlerta('El nuevo correo no puede ser igual al correo que ya tienes registrado.', 'info');
                 return;
             }
 
-            // QAS45HU-86: Solicitar confirmación con la contraseña actual
             if (passwordConfirm !== usuarioActual.password) {
                 mostrarAlerta('Contraseña incorrecta. Por seguridad, debes ingresar tu contraseña actual válida para autorizar el cambio de correo.', 'danger');
                 return;
@@ -292,7 +251,6 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 let clientes = JSON.parse(localStorage.getItem(STORAGE_KEY_CLIENTES)) || [];
 
-                // QAS45HU-90: Verificar que el nuevo correo no esté registrado por otro usuario
                 const correoDuplicado = clientes.some(c => 
                     c.correo && 
                     c.correo.toLowerCase() === nuevoCorreo && 
@@ -305,7 +263,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
-                // QAS45HU-91: Actualizar el correo en las tablas correspondientes / almacenamiento
                 const correoAnterior = usuarioActual.correo;
                 usuarioActual.correo = nuevoCorreo;
 
@@ -321,10 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 localStorage.setItem(STORAGE_KEY_CLIENTES, JSON.stringify(clientes));
 
-                // QAS45HU-93: Renovar la sesión del usuario con el nuevo correo
                 guardarSesionActiva(usuarioActual);
-
-                // Actualizar interfaz visual
                 renderizarDatosEnVista(usuarioActual);
                 formCorreo.reset();
 
@@ -334,9 +288,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /**
-     * Manejador del Formulario 3: Cambio de Contraseña
-     */
     formPassword.addEventListener('submit', (e) => {
         e.preventDefault();
         alertContainer.innerHTML = '';
@@ -350,7 +301,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Validar contraseña actual contra la almacenada
         if (passActual !== usuarioActual.password) {
             mostrarAlerta('La contraseña actual ingresada es incorrecta.', 'danger');
             return;
@@ -374,21 +324,15 @@ document.addEventListener('DOMContentLoaded', () => {
         activarBotonCarga(btnCambiarPass, btnPassText, btnPassSpinner, 'Actualizando...');
 
         setTimeout(() => {
-            // Actualizar contraseña en el usuario
             usuarioActual.password = passNuevo;
             sincronizarUsuarioEnBaseDeDatos(usuarioActual);
 
-            // Limpiar inputs de contraseña
             formPassword.reset();
-
             restaurarBotonCarga(btnCambiarPass, btnPassText, btnPassSpinner, 'Actualizar Contraseña');
             mostrarAlerta('¡Contraseña cambiada exitosamente! Tu cuenta ahora está protegida con la nueva clave.', 'success');
         }, 700);
     });
 
-    /**
-     * Actualiza el usuario dentro del arreglo 'db_clientes_tecni' y en la sesión activa
-     */
     function sincronizarUsuarioEnBaseDeDatos(usuario) {
         let clientes = JSON.parse(localStorage.getItem(STORAGE_KEY_CLIENTES)) || [];
         const index = clientes.findIndex(c => (usuario.id && c.id === usuario.id) || (c.correo && c.correo.toLowerCase() === usuario.correo.toLowerCase()));
@@ -403,29 +347,28 @@ document.addEventListener('DOMContentLoaded', () => {
         guardarSesionActiva(usuario);
     }
 
-    /**
-     * Guarda el usuario en sesión activa
-     */
     function guardarSesionActiva(usuario) {
         localStorage.setItem(STORAGE_KEY_SESION, JSON.stringify(usuario));
         sessionStorage.setItem(STORAGE_KEY_SESION, JSON.stringify(usuario));
     }
 
-    /**
-     * Cierra la sesión activa y redirige al registro / login
-     */
-    function cerrarSesion() {
+    async function cerrarSesion() {
         localStorage.removeItem(STORAGE_KEY_SESION);
         sessionStorage.removeItem(STORAGE_KEY_SESION);
         mostrarAlerta('Sesión cerrada correctamente. Redirigiendo...', 'info');
+        if (typeof window.cerrarSesion === 'function' && window.cerrarSesion !== cerrarSesion) {
+            try {
+                await window.cerrarSesion();
+                return;
+            } catch (e) {
+                console.error(e);
+            }
+        }
         setTimeout(() => {
-            window.location.href = 'register-client.html';
+            window.location.href = '../login.html';
         }, 1200);
     }
 
-    /**
-     * Helper para mostrar alertas dinámicas de Bootstrap
-     */
     function mostrarAlerta(mensaje, tipo = 'danger') {
         alertContainer.innerHTML = `
             <div class="alert alert-${tipo} alert-dismissible fade show border-0 d-flex align-items-center gap-2 mb-4" 
@@ -438,9 +381,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    /**
-     * Utilidad para alternar entre ver u ocultar el texto de un input de contraseña
-     */
     function configurarTogglePassword(btnId, inputId, iconId) {
         const btn = document.getElementById(btnId);
         const input = document.getElementById(inputId);
