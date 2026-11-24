@@ -184,4 +184,3 @@ SELECT t.Id AS TecnicoId,
 FROM Tecnicos t
 LEFT JOIN Resenas r ON r.TecnicoId = t.Id
 GROUP BY t.Id;
-

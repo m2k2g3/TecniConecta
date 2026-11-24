@@ -1,24 +1,37 @@
 <?php
 session_start();
-header('Content-Type: application/json');
-require_once '../modelo/index.php'; // Tu conexión a la base de datos
+header('Content-Type: application/json; charset=utf-8');
+
+require_once __DIR__ . '/../../config/conexion.php'; 
+
+try {
+    $conexion = obtenerConexion();
+} catch (Exception $e) {
+    echo json_encode([
+        'exito' => false,
+        'mensaje' => 'Error de conexión a la base de datos: ' . $e->getMessage()
+    ]);
+    exit;
+}
 
 // =====================================================
 // CONFIGURACIÓN DE SUBIDA DE ARCHIVOS
 // =====================================================
-define('RUTA_UPLOADS', __DIR__ . '/../uploads/documents/');
+define('RUTA_UPLOADS', __DIR__ . '/../../uploads/documents/');
 define('TAMANO_MAXIMO', 20 * 1024 * 1024); // 20 MB
+
 $tiposPermitidos = [
     'application/pdf',
     'image/jpeg',
     'image/png',
     'image/webp'
 ];
+
 $extensionesPermitidas = ['pdf', 'jpg', 'jpeg', 'png', 'webp'];
 
 // Crear carpeta si no existe
 if (!file_exists(RUTA_UPLOADS)) {
-    mkdir(RUTA_UPLOADS, 0755, true);
+    @mkdir(RUTA_UPLOADS, 0755, true);
 }
 
 $accion = $_GET['action'] ?? '';
@@ -27,8 +40,12 @@ $accion = $_GET['action'] ?? '';
 // OBTENER CATEGORÍAS
 // =====================================================
 if ($accion === 'categorias') {
-    $res = $conexion->query("SELECT Id, Nombre FROM Categorias ORDER BY Nombre");
-    echo json_encode($res->fetch_all(MYSQLI_ASSOC));
+    try {
+        $res = $conexion->query("SELECT Id, Nombre FROM Categorias ORDER BY Nombre");
+        echo json_encode($res->fetchAll(PDO::FETCH_ASSOC));
+    } catch (Exception $e) {
+        echo json_encode([]);
+    }
     exit;
 }
 
@@ -37,11 +54,13 @@ if ($accion === 'categorias') {
 // =====================================================
 if ($accion === 'especialidades') {
     $catId = intval($_GET['categoriaId'] ?? 0);
-    $stmt = $conexion->prepare("SELECT Id, Nombre FROM Especialidades WHERE CategoriaId = ? ORDER BY Nombre");
-    $stmt->bind_param('i', $catId);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    echo json_encode($res->fetch_all(MYSQLI_ASSOC));
+    try {
+        $stmt = $conexion->prepare("SELECT Id, Nombre FROM Especialidades WHERE CategoriaId = ? ORDER BY Nombre");
+        $stmt->execute([$catId]);
+        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+    } catch (Exception $e) {
+        echo json_encode([]);
+    }
     exit;
 }
 
@@ -52,8 +71,10 @@ if ($accion === 'registrar' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     
     try {
         // 1. Validar contraseñas
-        if ($_POST['Contrasena'] !== $_POST['ConfirmarContrasena']) {
-            throw new Exception('Las contraseñas no coinciden');
+        $contrasena = $_POST['Contrasena'] ?? '';
+        $confirmarContrasena = $_POST['ConfirmarContrasena'] ?? '';
+        if ($contrasena === '' || $contrasena !== $confirmarContrasena) {
+            throw new Exception('Las contraseñas no coinciden o están vacías');
         }
 
         // 2. Validar archivo subido
@@ -84,52 +105,58 @@ if ($accion === 'registrar' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $rutaRelativa = 'uploads/documents/' . $nombreUnico;
 
         if (!move_uploaded_file($archivo['tmp_name'], $rutaDestino)) {
-            throw new Exception('No se pudo guardar el archivo. Verifica los permisos de la carpeta uploads/documents');
+            throw new Exception('No se pudo guardar el archivo en el servidor. Verifica los permisos de carpeta');
         }
 
         // 4. Insertar en tabla Usuarios
-        $nombreCompleto = trim($_POST['NombreCompleto']);
-        $correo = trim($_POST['CorreoElectronico']);
+        $nombreCompleto = trim($_POST['NombreCompleto'] ?? '');
+        $correo = strtolower(trim($_POST['CorreoElectronico'] ?? ''));
         $telefono = trim($_POST['Telefono'] ?? '');
         $direccion = trim($_POST['Direccion'] ?? '');
         $ciudad = trim($_POST['Ciudad'] ?? '');
-        $contrasenaHash = password_hash($_POST['Contrasena'], PASSWORD_DEFAULT);
+
+        if ($nombreCompleto === '' || $correo === '') {
+            throw new Exception('El nombre completo y correo son obligatorios');
+        }
+
+        // Verificar si el correo ya existe
+        $checkStmt = $conexion->prepare("SELECT Id FROM Usuarios WHERE CorreoElectronico = ? LIMIT 1");
+        $checkStmt->execute([$correo]);
+        if ($checkStmt->fetch()) {
+            if (file_exists($rutaDestino)) unlink($rutaDestino);
+            throw new Exception('Este correo electrónico ya se encuentra registrado');
+        }
+
+        $contrasenaHash = password_hash($contrasena, PASSWORD_DEFAULT);
 
         $stmt = $conexion->prepare("INSERT INTO Usuarios 
-            (NombreCompleto, CorreoElectronico, ContrasenaHash, Rol, Telefono, Direccion, Ciudad)
-            VALUES (?, ?, ?, 'Tecnico', ?, ?, ?)");
-        $stmt->bind_param('ssssss', $nombreCompleto, $correo, $contrasenaHash, $telefono, $direccion, $ciudad);
+            (NombreCompleto, CorreoElectronico, ContrasenaHash, Rol, Telefono, Direccion, Ciudad, EstaActivo)
+            VALUES (?, ?, ?, 'Tecnico', ?, ?, ?, 1)");
+        $stmt->execute([$nombreCompleto, $correo, $contrasenaHash, $telefono, $direccion, $ciudad]);
         
-        if (!$stmt->execute()) {
-            // Eliminar archivo si falla el registro
-            if (file_exists($rutaDestino)) unlink($rutaDestino);
-            throw new Exception('Error al crear usuario: ' . $stmt->error);
-        }
-        
-        $usuarioId = $conexion->insert_id;
+        $usuarioId = (int)$conexion->lastInsertId();
 
         // 5. Insertar en tabla Tecnicos — EstadoVerificacion por defecto 'Pendiente'
-        $categoriaId = intval($_POST['CategoriaId']);
+        $categoriaId = intval($_POST['CategoriaId'] ?? 0);
         $especialidadId = !empty($_POST['EspecialidadId']) ? intval($_POST['EspecialidadId']) : null;
         $anosExperiencia = intval($_POST['AnosExperiencia'] ?? 0);
         $precioBase = floatval($_POST['PrecioBaseVisita'] ?? 0);
-        $servicios = trim($_POST['ServiciosOfrecidos'] ?? '');
+        $servicios = trim($_POST['ServiciosOfrecidos'] ?? $_POST['EspecialidadDetallada'] ?? '');
 
-        $stmt = $conexion->prepare("INSERT INTO Tecnicos 
-            (UsuarioId, Rol, CategoriaId, EspecialidadId, AnosExperiencia, PrecioBaseVisita, 
-             UrlDocumentoVerificacion, ServiciosOfrecidos, EstadoVerificacion)
+        if ($categoriaId <= 0) {
+            throw new Exception('Debes seleccionar una categoría principal');
+        }
+
+        $stmt = $conexion->prepare(
+            "INSERT INTO Tecnicos 
+            (UsuarioId, Rol, CategoriaId, EspecialidadId, AnosExperiencia, PrecioBaseVisita, UrlDocumentoVerificacion, ServiciosOfrecidos, EstadoVerificacion)
             VALUES (?, 'Tecnico', ?, ?, ?, ?, ?, ?, 'Pendiente')");
-        $stmt->bind_param('iiidsss', 
+        $stmt->execute([
             $usuarioId, $categoriaId, $especialidadId, $anosExperiencia, 
             $precioBase, $rutaRelativa, $servicios
-        );
+        ]);
         
-        if (!$stmt->execute()) {
-            if (file_exists($rutaDestino)) unlink($rutaDestino);
-            throw new Exception('Error al crear perfil de técnico: ' . $stmt->error);
-        }
-        
-        $tecnicoId = $conexion->insert_id;
+        $tecnicoId = (int)$conexion->lastInsertId();
 
         // 6. Crear notificación: cuenta en revisión
         $titulo = 'Registro recibido — En revisión';
@@ -138,8 +165,7 @@ if ($accion === 'registrar' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $conexion->prepare("INSERT INTO Notificaciones 
             (UsuarioId, Titulo, Mensaje, Leido)
             VALUES (?, ?, ?, 0)");
-        $stmt->bind_param('iss', $usuarioId, $titulo, $mensaje);
-        $stmt->execute();
+        $stmt->execute([$usuarioId, $titulo, $mensaje]);
 
         // 7. Respuesta exitosa
         echo json_encode([
@@ -159,8 +185,9 @@ if ($accion === 'registrar' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 // =====================================================
 // VERIFICAR ESTADO DE CUENTA AL INICIAR SESIÓN
 // =====================================================
-function verificarEstadoVerificacion($usuarioId) {
+function verificarEstadoVerificacion(int $usuarioId): bool {
     global $conexion;
+    if (!$conexion) return false;
     
     $stmt = $conexion->prepare("
         SELECT u.Rol, t.EstadoVerificacion 
@@ -168,11 +195,14 @@ function verificarEstadoVerificacion($usuarioId) {
         LEFT JOIN Tecnicos t ON u.Id = t.UsuarioId
         WHERE u.Id = ?
     ");
-    $stmt->bind_param('i', $usuarioId);
-    $stmt->execute();
-    $result = $stmt->get_result()->fetch_assoc();
+
+    $stmt->execute([$usuarioId]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    // Si es técnico y no está verificado, bloquear acceso
+    if (!$result) {
+        return false;
+    }
+
     if ($result['Rol'] === 'Tecnico' && $result['EstadoVerificacion'] !== 'Verificado') {
         $_SESSION['error_acceso'] = 'Tu cuenta aún no ha sido verificada por el administrador. Recibirás una notificación por correo cuando sea aprobada.';
         return false;
@@ -180,4 +210,3 @@ function verificarEstadoVerificacion($usuarioId) {
     
     return true;
 }
-?>

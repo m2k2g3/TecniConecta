@@ -1,0 +1,75 @@
+body {
+    background-color: #0b1120;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: #f1f5f9;
+}
+
+.card-tecni {
+    background-color: #111c33;
+    border: 1px solid #1e2e4f;
+    border-radius: 12px;
+}
+
+.logo-box {
+    display: inline-block;
+}
+
+.form-label-tecni {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #cbd5e1;
+}
+
+.form-control-tecni {
+    background-color: #0b1120;
+    border: 1px solid #24355a;
+    color: #f8fafc;
+    border-radius: 6px;
+    padding: 0.6rem 0.85rem;
+}
+
+.form-control-tecni:focus {
+    background-color: #0b1120;
+    border-color: #3b82f6;
+    color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.form-control-tecni::placeholder {
+    color: #64748b;
+}
+
+.btn-eye {
+    background-color: #0b1120;
+    border: 1px solid #24355a;
+    color: #94a3b8;
+    border-radius: 0 6px 6px 0;
+}
+
+.btn-eye:hover,
+.btn-eye:focus {
+    background-color: #17233f;
+    border-color: #24355a;
+    color: #ffffff;
+    box-shadow: none;
+}
+
+.btn-tecni {
+    background-color: #2563eb;
+    border: 1px solid #2563eb;
+    color: #ffffff;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.btn-tecni:hover {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+    color: #ffffff;
+}
+
+.btn-tecni:disabled {
+    background-color: #1e3a8a;
+    border-color: #1e3a8a;
+    color: #94a3b8;
+}
